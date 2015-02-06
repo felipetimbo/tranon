@@ -1,13 +1,13 @@
-# VRaptor blank project
+# trajectory anonymity project
 
-This is a blank project to help you to use VRaptor. You can easily import in you IDE as Maven project.
-
-Este é um projeto em branco para ajudar você a usar o VRaptor. Você pode facilmente importá-lo na sua IDE favorita como um projeto Maven.
-
-Após criar seu projeto você pode rodá-lo com um tomcat7 ou +:
+This is a project to help people to publish massive trajectories preserving the privacy of individuals.
 
 ```
-mvn tomcat7:run
+UFC Master's Program 
+
+Oriented by: Javam C. Machado
+Student: Felipe Timbo
+Assistant undergraduate: Andre Luis
 ```
 
-Cuidado para *jamais* executar `mvn tomcat:run` pois ele usará um tomcat6 (incompatível).
+
