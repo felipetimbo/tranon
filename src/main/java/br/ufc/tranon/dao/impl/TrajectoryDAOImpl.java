@@ -15,15 +15,15 @@ import javax.enterprise.context.RequestScoped;
 @RequestScoped
 public class TrajectoryDAOImpl extends BaseDAOImpl implements TrajectoryDAO
 {
-	public List<PointOfTrajectory> findPointsByTaxiIdAndDate(Integer id, String startDate, String finalDate) throws Exception
+	public List<PointOfTrajectory> findPointsByTaxiIdAndDate(String experiment, Integer id, String startDate, String finalDate) throws Exception
 	{
 		List<PointOfTrajectory> points = new ArrayList<PointOfTrajectory>();
 
 		createStatement();
 
-		String sql = "select taxi_id, date_time, longitude, latitude, ST_AsGeoJson(ST_MakePoint(longitude, latitude)) as geom "
-				+ "from trajectories_100k "
-				+ "where taxi_id = " + id + " and date_time between '" + startDate + "' and '" + finalDate + "'";
+		String sql = "select taxi_id, date_time, longitude, latitude, ST_AsGeoJson(ST_MakePoint(longitude, latitude)) as geom"
+				+ " from trajectories_" + experiment 
+				+ " where taxi_id = " + id + " and date_time between '" + startDate + "' and '" + finalDate + "'";
 
 		ResultSet r = this.s.executeQuery(sql);
 		while (r.next())
@@ -68,7 +68,7 @@ public class TrajectoryDAOImpl extends BaseDAOImpl implements TrajectoryDAO
 		return points;
 	}
 
-	public String findTrajectoryByTaxiIdAndDate(Integer taxiId, String startDate, String finalDate)	throws Exception
+	public String findTrajectoryByTaxiIdAndDate(String experiment, Integer taxiId, String startDate, String finalDate)	throws Exception
 	{
 		String trajectory = "";
 
@@ -76,7 +76,7 @@ public class TrajectoryDAOImpl extends BaseDAOImpl implements TrajectoryDAO
 
 		String sql = "select ST_AsGeoJson(ST_MakeLine(points.geom)) from ("
 				+ "select taxi_id, date_time, ST_MakePoint(longitude, latitude) as geom "
-				+ "from trajectories_100k where taxi_id = " + taxiId 
+				+ "from trajectories_" + experiment + " where taxi_id = " + taxiId 
 				+ " and date_time between '" + startDate + "' and '" + finalDate + "'" + 
 				") as points";
 

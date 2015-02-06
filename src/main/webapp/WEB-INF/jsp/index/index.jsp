@@ -15,7 +15,13 @@
 
 	</head>
 	<body>
-		
+		<select id="experiment">
+			<option value="">-- Experiment --</option>
+			<option value="100k">100k</option>
+			<option value="200k">200k</option>
+			<option value="400k">400k</option>
+			<option value="800k">800k</option>
+		</select>
 		<input id="taxi_id" type="text" placeholder="Taxi ID" style="width:65px;" maxlength="5" />
 		<select id="s_date">
 			<option value="">-- Start Date --</option>

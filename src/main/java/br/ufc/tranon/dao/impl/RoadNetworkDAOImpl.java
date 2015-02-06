@@ -2,26 +2,29 @@ package br.ufc.tranon.dao.impl;
 
 import br.ufc.tranon.dao.RoadNetworkDAO;
 import br.ufc.tranon.entity.PointOfTrajectory;
+
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
 import javax.enterprise.context.RequestScoped;
 
 @RequestScoped
-public class RoadNetworkDAOImpl
-extends BaseDAOImpl
-implements RoadNetworkDAO
+public class RoadNetworkDAOImpl extends BaseDAOImpl implements RoadNetworkDAO
 {
-	public List<PointOfTrajectory> findPointsByTaxiIdAndDate(Integer id, String startDate, String finalDate) throws Exception
+	public List<PointOfTrajectory> findPointsByTaxiIdAndDate(String experiment, Integer id, String startDate, String finalDate) 
+			throws Exception
 	{
 		List<PointOfTrajectory> points = new ArrayList<PointOfTrajectory>();
 
 		createStatement();
 
-		String sql = "select taxi_id, date_time, longitude_nn, latitude_nn, ST_AsGeoJson(ST_MakePoint(longitude_nn, latitude_nn)) as geom "
-				+ "from trajectories_100k where taxi_id = " + id + " and date_time between '" + startDate + "' and '" + finalDate + "'";
+		String sql = "select taxi_id, date_time, longitude_nn, latitude_nn, "
+				+ "ST_AsGeoJson(ST_MakePoint(longitude_nn, latitude_nn)) as geom "
+				+ "from trajectories_" + experiment + " where taxi_id = " + id 
+				+ " and date_time between '" + startDate + "' and '" + finalDate + "'";
 
 		ResultSet r = this.s.executeQuery(sql);
 		while (r.next())
@@ -39,7 +42,7 @@ implements RoadNetworkDAO
 		return points;
 	}
 
-	public String findTrajectoryByTaxiIdAndDate(Integer taxiId, String startDate, String finalDate)
+	public String findTrajectoryByTaxiIdAndDate(String experiment, Integer taxiId, String startDate, String finalDate)
 			throws Exception
 	{
 		String trajectory = "";
@@ -48,7 +51,7 @@ implements RoadNetworkDAO
 
 		String sql = "select ST_AsGeoJson(ST_MakeLine(points.geom)) from "
 				+ "(select taxi_id, date_time, ST_MakePoint(longitude_nn, latitude_nn) as geom "
-				+ "from trajectories_100k where taxi_id = " 
+				+ "from trajectories_" + experiment + " where taxi_id = " 
 				+ taxiId + " and date_time between '" + startDate + "' and '" + finalDate + "'" 
 				+ ") as points";
 

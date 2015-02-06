@@ -70,6 +70,7 @@ $(document).ready(function(){
 
 function showOriginalPoints(){
 	
+	var exp = $("#experiment")[0].value;
 	var taxi_id = $("#taxi_id")[0].value;
 	var s_date = $("#s_date")[0].value + " " + $("#s_hour")[0].value;
 	var f_date = $("#f_date")[0].value + " " + $("#f_hour")[0].value;
@@ -77,7 +78,8 @@ function showOriginalPoints(){
 	$.ajax({
 		url: 'index/showOriginalPoints',
 		cache: false, 
-		data: {taxiId: taxi_id, 
+		data: { experiment: exp,
+			taxiId: taxi_id, 
 			startDate: s_date,
 			finalDate: f_date},
 			success: function(data){
@@ -97,6 +99,7 @@ function showOriginalPoints(){
 
 function showSimplifiedPoints(){
 	
+	var exp = $("#experiment")[0].value;
 	var taxi_id = $("#taxi_id")[0].value;
 	var s_date = $("#s_date")[0].value + " " + $("#s_hour")[0].value;
 	var f_date = $("#f_date")[0].value + " " + $("#f_hour")[0].value;
@@ -104,7 +107,8 @@ function showSimplifiedPoints(){
 	$.ajax({
 		url: 'index/showSimplifiedPoints',
 		cache: false, 
-		data: {taxiId: taxi_id, 
+		data: {experiment: exp,
+			taxiId: taxi_id, 
 			startDate: s_date,
 			finalDate: f_date},
 			success: function(data){
@@ -124,6 +128,8 @@ function showSimplifiedPoints(){
 }
 
 function showOriginalTrajectory(){
+	
+	var exp = $("#experiment")[0].value;
 	var taxi_id = $("#taxi_id")[0].value;
 	var s_date = $("#s_date")[0].value + " " + $("#s_hour")[0].value;
 	var f_date = $("#f_date")[0].value + " " + $("#f_hour")[0].value;
@@ -131,7 +137,8 @@ function showOriginalTrajectory(){
 	$.ajax({
 		url: 'index/showOriginalTrajectory',
 		cache: false, 
-		data: {taxiId: taxi_id, 
+		data: {experiment: exp,
+			taxiId: taxi_id, 
 			startDate: s_date,
 			finalDate: f_date},
 			success: function(data){
@@ -148,6 +155,8 @@ function showOriginalTrajectory(){
 }
 
 function showSimplifiedTrajectory(){
+	
+	var exp = $("#experiment")[0].value;
 	var taxi_id = $("#taxi_id")[0].value;
 	var s_date = $("#s_date")[0].value + " " + $("#s_hour")[0].value;
 	var f_date = $("#f_date")[0].value + " " + $("#f_hour")[0].value;
@@ -155,7 +164,8 @@ function showSimplifiedTrajectory(){
 	$.ajax({
 		url: 'index/showSimplifiedTrajectory',
 		cache: false, 
-		data: {taxiId: taxi_id, 
+		data: {experiment: exp,
+			taxiId: taxi_id, 
 			startDate: s_date,
 			finalDate: f_date},
 			success: function(data){
