@@ -14,4 +14,10 @@ public interface TrajectoryDAO extends BaseDAO
 
 	String findTrajectoryByTaxiIdAndDate(String experiment, Integer taxiId, String startDate, String finalDate)
 			throws Exception;
+
+	List<PointOfTrajectory> findAllPointsByExperiment(String experiment)
+			throws Exception;
+
+	List<Long> findRoadNetworkPointsByExperiment(String experiment) 
+			throws Exception;
 }

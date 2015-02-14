@@ -11,4 +11,5 @@ public interface RoadNetworkService
 
 	public String showSimplifiedTrajectory(String experiment, Integer taxiId, String startDate, String finalDate)
 			throws Exception;
+	
 }
