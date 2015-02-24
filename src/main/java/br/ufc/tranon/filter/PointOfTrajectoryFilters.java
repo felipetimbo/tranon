@@ -1,14 +1,14 @@
 package br.ufc.tranon.filter;
 
-import br.ufc.tranon.entity.PointOfTrajectory;
+import br.ufc.tranon.entity.RoadNetworkPoint;
 
 public class PointOfTrajectoryFilters {
 
-	public static Filter<PointOfTrajectory, Long> taxiIdFilter() {
+	public static Filter<RoadNetworkPoint, Long> nearestNeighborFilter() {
 		
-		Filter<PointOfTrajectory,Long> filter = new Filter<PointOfTrajectory,Long>() {
-			public boolean isMatched(PointOfTrajectory object, Long nn) {
-				return object.getNn().equals(nn);
+		Filter<RoadNetworkPoint,Long> filter = new Filter<RoadNetworkPoint,Long>() {
+			public boolean isMatched(RoadNetworkPoint point, Long nn) {
+				return point.getId().equals(nn);
 			}
 		};
 		

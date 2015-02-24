@@ -19,5 +19,7 @@ public abstract interface TrajectoryService
 	List<PointOfTrajectory> showAnonymizedTrajectory(String experiment, int k,
 			int m) throws Exception;
 
+	Double calculateArea(List<PointOfTrajectory> trajectory);
+
 	void setTrajectoryDAO(TrajectoryDAO trajectoryDAO);
 }
