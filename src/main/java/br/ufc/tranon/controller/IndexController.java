@@ -13,8 +13,7 @@ import br.ufc.tranon.service.RoadNetworkService;
 import br.ufc.tranon.service.TrajectoryService;
 
 @Controller
-public class IndexController
-{
+public class IndexController {
 	private final Result result;
 	
 	@Inject

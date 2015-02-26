@@ -18,7 +18,7 @@ import br.ufc.tranon.entity.RoadNetworkPoint;
 import br.ufc.tranon.filter.FilterList;
 import br.ufc.tranon.filter.PointOfTrajectoryFilters;
 import br.ufc.tranon.service.TrajectoryService;
-import br.ufc.tranon.util.Combination;
+import br.ufc.tranon.util.CombinationGenerator;
 
 @RequestScoped
 public class TrajectoryServiceImpl implements TrajectoryService
@@ -46,15 +46,22 @@ public class TrajectoryServiceImpl implements TrajectoryService
 		List<PointOfTrajectory> allPointsOfTrajectory = trajectoryDAO.findAllPointsByExperiment(experiment);
 		List<Long> roadNetworkPoints = trajectoryDAO.findRoadNetworkPointsByExperiment(experiment);
 		
-		long start = System.currentTimeMillis();
-
-		RoadNetwork roadNetwork = updateRoadNetwork(allPointsOfTrajectory, roadNetworkPoints);
+		long start1 = System.currentTimeMillis();
 		
-		long elapsed = System.currentTimeMillis() - start;
-		System.out.println(elapsed + " milisegundos");
+		RoadNetwork roadNetwork = new RoadNetwork(allPointsOfTrajectory, roadNetworkPoints);
+		
+		long elapsed1 = System.currentTimeMillis() - start1;
+		System.out.println(elapsed1 + " milisegundos");
+		
 		
 		for(int i=1; i <= m; i++){
+			long start = System.currentTimeMillis();
+			
 			List<PointsSet> qids = findQIDsSizeI(roadNetwork, k, i);
+			
+			long elapsed = System.currentTimeMillis() - start;
+			System.out.println(elapsed + " milisegundos");
+			
 			System.out.println("QID tamanho " + i + ": ");
 //			for(PointsSet q : qids){
 //				System.out.println("pontos:" + q.getPoints() + ", suporte: " + q.getSupport());
@@ -67,41 +74,11 @@ public class TrajectoryServiceImpl implements TrajectoryService
 		
 	}
 
-	private RoadNetwork updateRoadNetwork(List<PointOfTrajectory> allPointsOfTrajectory, List<Long> roadNetworkPoints) {
-		RoadNetwork rn = new RoadNetwork();
-		rn.setPoints(new ArrayList<RoadNetworkPoint>());
-		rn.setPointsId(new ArrayList<Long>());
-		
-		for(Long pointId : roadNetworkPoints){
-			rn.getPointsId().add(pointId);
-			
-			RoadNetworkPoint rnp = new RoadNetworkPoint();
-			List<Integer> trajectoriesList = new ArrayList<Integer>();
-			
-			for(PointOfTrajectory p : allPointsOfTrajectory){
-				if(p.getNn().equals(pointId)){
-					if(rnp.getId() == null){
-						rnp.setId(p.getNn());
-						rnp.setLatitude(p.getLatitude());
-						rnp.setLongitude(p.getLongitude());
-					}
-					if(!trajectoriesList.contains(p.getTaxiId())){
-						trajectoriesList.add(p.getTaxiId());
-					}
-				}
-			}
-			
-			rnp.setTrajectories(trajectoriesList);
-			rn.getPoints().add(rnp);
-		}
-		
-		return rn;
-	}
-
 	private List<PointsSet> findQIDsSizeI(RoadNetwork roadNetwork, int k, int m) {
 		
 		List<PointsSet> qids = new ArrayList<PointsSet>();
-		List<List<Long>> pointsSetSizeIList = Combination.getCombinations(roadNetwork.getPointsId(), m);
+//		List<List<Long>> pointsSetSizeIList = Combination.getCombinations(roadNetwork.getPointsId(), m);
+		CombinationGenerator<Long> pointsSetSizeIList = new CombinationGenerator<Long>(roadNetwork.getPointsId(), m);
 		
 		for(List<Long> pointsSetSizeI : pointsSetSizeIList){
 			List<Integer> commonsTrajectories = calculateSupport(pointsSetSizeI, roadNetwork);
@@ -110,7 +87,7 @@ public class TrajectoryServiceImpl implements TrajectoryService
 			if(support != 0 && support < k){
 				PointsSet qid = new PointsSet(pointsSetSizeI, m, support);
 				qids.add(qid);
-				System.out.println("pontos:" + qid.getPoints() + ", suporte: " + qid.getSupport());
+//				System.out.println("pontos:" + qid.getPoints() + ", suporte: " + qid.getSupport());
 			}
 			
 		}

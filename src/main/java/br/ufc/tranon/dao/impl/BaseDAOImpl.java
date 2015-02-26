@@ -1,12 +1,12 @@
 package br.ufc.tranon.dao.impl;
 
-import br.ufc.tranon.dao.BaseDAO;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 
 import org.postgresql.PGConnection;
+
+import br.ufc.tranon.dao.BaseDAO;
 
 @SuppressWarnings("deprecation")
 public class BaseDAOImpl implements BaseDAO

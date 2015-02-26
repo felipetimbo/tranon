@@ -25,22 +25,22 @@ public class TrajectoryServiceTest {
 		service.setTrajectoryDAO(dao);
 	}
 	
-	@Test
+//	@Test
 	public void showAnonymizedTrajectoryTestOk() throws Exception
 	{
-		String experiment = "100k";
+		String experiment = "200k";
 		int k = 5;
-		int m = 2;
+		int m = 3;
 		
 		long start = System.currentTimeMillis();
 
 		service.showAnonymizedTrajectory(experiment, k, m);
 		
 		long elapsed = System.currentTimeMillis() - start;
-		System.out.println(elapsed + " milisegundos");
+		System.out.println("tempo total:" + elapsed + " milisegundos");
 	}
 	
-	@Test
+//	@Test
 	public void areaPoligonTest1Ok() throws Exception
 	{
 		
@@ -78,7 +78,7 @@ public class TrajectoryServiceTest {
 		
 	}
 	
-	@Test
+//	@Test
 	public void areaPoligonTest2Ok() throws Exception
 	{
 		

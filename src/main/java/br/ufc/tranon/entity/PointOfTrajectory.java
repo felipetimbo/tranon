@@ -4,6 +4,7 @@ import java.util.Date;
 import org.postgis.PGgeometry;
 
 public class PointOfTrajectory {
+	
 	private Integer taxiId;
 	private Date datetime;
 	private Double longitude;
