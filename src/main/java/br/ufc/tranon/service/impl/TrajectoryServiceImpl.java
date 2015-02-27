@@ -8,6 +8,9 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 
 import math.geom2d.Point2D;
+import math.geom2d.polygon.MultiPolygon2D;
+import math.geom2d.polygon.Polygon2D;
+import math.geom2d.polygon.Polygons2D;
 import math.geom2d.polygon.Polyline2D;
 import math.geom2d.polygon.SimplePolygon2D;
 import br.ufc.tranon.dao.TrajectoryDAO;
@@ -18,7 +21,7 @@ import br.ufc.tranon.entity.RoadNetworkPoint;
 import br.ufc.tranon.filter.FilterList;
 import br.ufc.tranon.filter.PointOfTrajectoryFilters;
 import br.ufc.tranon.service.TrajectoryService;
-import br.ufc.tranon.util.CombinationGenerator;
+import br.ufc.tranon.util.Combination;
 
 @RequestScoped
 public class TrajectoryServiceImpl implements TrajectoryService
@@ -46,22 +49,15 @@ public class TrajectoryServiceImpl implements TrajectoryService
 		List<PointOfTrajectory> allPointsOfTrajectory = trajectoryDAO.findAllPointsByExperiment(experiment);
 		List<Long> roadNetworkPoints = trajectoryDAO.findRoadNetworkPointsByExperiment(experiment);
 		
-		long start1 = System.currentTimeMillis();
+		long start = System.currentTimeMillis();
+
+		RoadNetwork roadNetwork = updateRoadNetwork(allPointsOfTrajectory, roadNetworkPoints);
 		
-		RoadNetwork roadNetwork = new RoadNetwork(allPointsOfTrajectory, roadNetworkPoints);
-		
-		long elapsed1 = System.currentTimeMillis() - start1;
-		System.out.println(elapsed1 + " milisegundos");
-		
+		long elapsed = System.currentTimeMillis() - start;
+		System.out.println(elapsed + " milisegundos");
 		
 		for(int i=1; i <= m; i++){
-			long start = System.currentTimeMillis();
-			
 			List<PointsSet> qids = findQIDsSizeI(roadNetwork, k, i);
-			
-			long elapsed = System.currentTimeMillis() - start;
-			System.out.println(elapsed + " milisegundos");
-			
 			System.out.println("QID tamanho " + i + ": ");
 //			for(PointsSet q : qids){
 //				System.out.println("pontos:" + q.getPoints() + ", suporte: " + q.getSupport());
@@ -74,11 +70,41 @@ public class TrajectoryServiceImpl implements TrajectoryService
 		
 	}
 
+	private RoadNetwork updateRoadNetwork(List<PointOfTrajectory> allPointsOfTrajectory, List<Long> roadNetworkPoints) {
+		RoadNetwork rn = new RoadNetwork();
+		rn.setPoints(new ArrayList<RoadNetworkPoint>());
+		rn.setPointsId(new ArrayList<Long>());
+		
+		for(Long pointId : roadNetworkPoints){
+			rn.getPointsId().add(pointId);
+			
+			RoadNetworkPoint rnp = new RoadNetworkPoint();
+			List<Integer> trajectoriesList = new ArrayList<Integer>();
+			
+			for(PointOfTrajectory p : allPointsOfTrajectory){
+				if(p.getNn().equals(pointId)){
+					if(rnp.getId() == null){
+						rnp.setId(p.getNn());
+						rnp.setLatitude(p.getLatitude());
+						rnp.setLongitude(p.getLongitude());
+					}
+					if(!trajectoriesList.contains(p.getTaxiId())){
+						trajectoriesList.add(p.getTaxiId());
+					}
+				}
+			}
+			
+			rnp.setTrajectories(trajectoriesList);
+			rn.getPoints().add(rnp);
+		}
+		
+		return rn;
+	}
+
 	private List<PointsSet> findQIDsSizeI(RoadNetwork roadNetwork, int k, int m) {
 		
 		List<PointsSet> qids = new ArrayList<PointsSet>();
-//		List<List<Long>> pointsSetSizeIList = Combination.getCombinations(roadNetwork.getPointsId(), m);
-		CombinationGenerator<Long> pointsSetSizeIList = new CombinationGenerator<Long>(roadNetwork.getPointsId(), m);
+		List<List<Long>> pointsSetSizeIList = Combination.getCombinations(roadNetwork.getPointsId(), m);
 		
 		for(List<Long> pointsSetSizeI : pointsSetSizeIList){
 			List<Integer> commonsTrajectories = calculateSupport(pointsSetSizeI, roadNetwork);
@@ -87,7 +113,7 @@ public class TrajectoryServiceImpl implements TrajectoryService
 			if(support != 0 && support < k){
 				PointsSet qid = new PointsSet(pointsSetSizeI, m, support);
 				qids.add(qid);
-//				System.out.println("pontos:" + qid.getPoints() + ", suporte: " + qid.getSupport());
+				System.out.println("pontos:" + qid.getPoints() + ", suporte: " + qid.getSupport());
 			}
 			
 		}
@@ -118,10 +144,10 @@ public class TrajectoryServiceImpl implements TrajectoryService
 	
 	
 	@Override
-	public Double calculateArea(List<PointOfTrajectory> trajectory){
-		Double area = 0d;
-
-		for(int i=0 ; i < trajectory.size()-1; i++){
+	public Double calculateArea(List<PointOfTrajectory> trajectory) {
+		Polygon2D resultantPolygon = new MultiPolygon2D();
+		
+		for(int i=0 ; i < trajectory.size()-1; i++) {
 				
 			Point2D originalOrigin = new Point2D(trajectory.get(i).getLongitude(), trajectory.get(i).getLatitude());
 			Point2D originalDestination = new Point2D(trajectory.get(i+1).getLongitude(), trajectory.get(i+1).getLatitude());
@@ -134,19 +160,19 @@ public class TrajectoryServiceImpl implements TrajectoryService
 			// if the two points don't intersect
 			if(originalLine.intersections(generalizedLine.firstEdge()).isEmpty()){
 				
-				area += Math.abs(new SimplePolygon2D(originalOrigin, originalDestination, generalizedDestination, generalizedOrigin).area());
+				resultantPolygon = Polygons2D.union(resultantPolygon, new SimplePolygon2D(originalOrigin, originalDestination, generalizedDestination, generalizedOrigin)); 
 				
 			} else {
 				
 				List<Point2D> intersection = (List<Point2D>) originalLine.intersections(generalizedLine.firstEdge());
-				area += Math.abs(new SimplePolygon2D(originalOrigin, intersection.get(0), generalizedOrigin).area());
-				area += Math.abs(new SimplePolygon2D(originalDestination, intersection.get(0), generalizedDestination).area());
+				resultantPolygon = Polygons2D.union(resultantPolygon, new SimplePolygon2D(originalOrigin, intersection.get(0), generalizedOrigin));
+				resultantPolygon = Polygons2D.union(resultantPolygon, new SimplePolygon2D(originalDestination, intersection.get(0), generalizedDestination));
 				
 			}
 				
 		}
 		
-		return area;
+		return resultantPolygon.area();
 	}
 	
 	@Override
