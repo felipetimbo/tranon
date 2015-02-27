@@ -11,8 +11,8 @@ public class RoadNetwork {
 	public RoadNetwork(){ }
 	
 	public RoadNetwork(List<PointOfTrajectory> allPointsOfTrajectory, List<Long> roadNetworkPointsId) {
-		setPoints(new ArrayList<RoadNetworkPoint>());
-		setPointsId(new ArrayList<Long>()); 
+		points = new ArrayList<RoadNetworkPoint>();
+		pointsId = new ArrayList<Long>(); 
 		
 		for(Long pointId : roadNetworkPointsId){
 			pointsId.add(pointId);
