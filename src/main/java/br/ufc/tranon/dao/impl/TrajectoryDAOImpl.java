@@ -117,7 +117,7 @@ public class TrajectoryDAOImpl extends BaseDAOImpl implements TrajectoryDAO
 			point.setLatitude(Double.valueOf(((BigDecimal)r.getObject(4)).doubleValue()));
 			point.setGeom((String)r.getObject(5));
 			point.setPoint((PGgeometry)r.getObject(6));
-			point.setNn((Long)r.getObject(7));
+			point.setNnId((Long)r.getObject(7));
 			point.setLongitudeNn(Double.valueOf(((BigDecimal)r.getObject(8)).doubleValue()));
 			point.setLatitudeNn(Double.valueOf(((BigDecimal)r.getObject(9)).doubleValue()));
 			points.add(point);

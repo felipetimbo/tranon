@@ -1,13 +1,16 @@
 package br.ufc.tranon.entity;
 
-import java.util.List;
+import java.util.Set;
+
+import math.geom2d.Point2D;
 
 public class RoadNetworkPoint {
 
 	private Long id;
 	private Double longitude;
 	private Double latitude;
-	private List<Integer> trajectories;
+	private Point2D point;
+	private Set<Integer> trajectories;
 	
 	public Long getId() {
 		return id;
@@ -33,12 +36,20 @@ public class RoadNetworkPoint {
 		this.latitude = latitude;
 	}
 	
-	public List<Integer> getTrajectories() {
+	public Point2D getPoint() {
+		return point;
+	}
+
+	public void setPoint(Point2D point) {
+		this.point = point;
+	}
+
+	public Set<Integer> getTrajectories() {
 		return trajectories;
 	}
-	
-	public void setTrajectories(List<Integer> trajectories) {
+
+	public void setTrajectories(Set<Integer> trajectories) {
 		this.trajectories = trajectories;
 	}
-	
+
 }

@@ -2,7 +2,7 @@ package br.ufc.tranon.service.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ListIterator;
+import java.util.Set;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -15,13 +15,12 @@ import math.geom2d.polygon.Polyline2D;
 import math.geom2d.polygon.SimplePolygon2D;
 import br.ufc.tranon.dao.TrajectoryDAO;
 import br.ufc.tranon.entity.PointOfTrajectory;
-import br.ufc.tranon.entity.PointsSet;
 import br.ufc.tranon.entity.RoadNetwork;
 import br.ufc.tranon.entity.RoadNetworkPoint;
-import br.ufc.tranon.filter.FilterList;
-import br.ufc.tranon.filter.PointOfTrajectoryFilters;
 import br.ufc.tranon.service.TrajectoryService;
-import br.ufc.tranon.util.Combination;
+import br.ufc.tranon.util.Combinations;
+
+import com.google.common.collect.Sets;
 
 @RequestScoped
 public class TrajectoryServiceImpl implements TrajectoryService
@@ -29,6 +28,8 @@ public class TrajectoryServiceImpl implements TrajectoryService
 	@Inject
 	private TrajectoryDAO trajectoryDAO;
 
+	private RoadNetwork roadNetwork;
+	
 	@Override
 	public List<PointOfTrajectory> showOriginalPoints(String experiment, Integer taxiId, String startDate, String finalDate) throws Exception {
 		return trajectoryDAO.findPointsByTaxiIdAndDate(experiment, taxiId, startDate, finalDate);
@@ -46,106 +47,70 @@ public class TrajectoryServiceImpl implements TrajectoryService
 	
 	@Override
 	public List<PointOfTrajectory> showAnonymizedTrajectory(String experiment, int k, int m) throws Exception {
+
+		/** TODO
+		 * Improve performance of these 3 methods
+		 */
 		List<PointOfTrajectory> allPointsOfTrajectory = trajectoryDAO.findAllPointsByExperiment(experiment);
-		List<Long> roadNetworkPoints = trajectoryDAO.findRoadNetworkPointsByExperiment(experiment);
-		
-		long start = System.currentTimeMillis();
+		List<Long> roadNetworkPointsId = trajectoryDAO.findRoadNetworkPointsByExperiment(experiment);
+		roadNetwork = new RoadNetwork(allPointsOfTrajectory, roadNetworkPointsId); 
 
-		RoadNetwork roadNetwork = updateRoadNetwork(allPointsOfTrajectory, roadNetworkPoints);
-		
-		long elapsed = System.currentTimeMillis() - start;
-		System.out.println(elapsed + " milisegundos");
-		
 		for(int i=1; i <= m; i++){
-			List<PointsSet> qids = findQIDsSizeI(roadNetwork, k, i);
-			System.out.println("QID tamanho " + i + ": ");
-//			for(PointsSet q : qids){
-//				System.out.println("pontos:" + q.getPoints() + ", suporte: " + q.getSupport());
-//			}
-			System.out.println("total: " + qids.size() + " pontos");
-			
-		}
-		
-		return null;
-		
-	}
 
-	private RoadNetwork updateRoadNetwork(List<PointOfTrajectory> allPointsOfTrajectory, List<Long> roadNetworkPoints) {
-		RoadNetwork rn = new RoadNetwork();
-		rn.setPoints(new ArrayList<RoadNetworkPoint>());
-		rn.setPointsId(new ArrayList<Long>());
-		
-		for(Long pointId : roadNetworkPoints){
-			rn.getPointsId().add(pointId);
-			
-			RoadNetworkPoint rnp = new RoadNetworkPoint();
-			List<Integer> trajectoriesList = new ArrayList<Integer>();
-			
-			for(PointOfTrajectory p : allPointsOfTrajectory){
-				if(p.getNn().equals(pointId)){
-					if(rnp.getId() == null){
-						rnp.setId(p.getNn());
-						rnp.setLatitude(p.getLatitude());
-						rnp.setLongitude(p.getLongitude());
-					}
-					if(!trajectoriesList.contains(p.getTaxiId())){
-						trajectoriesList.add(p.getTaxiId());
+			Combinations<Long> pointsSetSizeIList = new Combinations<Long>(roadNetwork.getPoints().keySet(), i);
+
+			for(List<Long> pointsSetSizeI : pointsSetSizeIList){
+				// IDEIA: pre-processar os pontos desnecessários if(sup == 0) com spark!
+				// armazenar uma lista com os ja processados 
+
+				Set<Integer> commonsTrajectories = getCommonsTrajectories(pointsSetSizeI);
+				Integer support = commonsTrajectories.size();
+
+				if(support != 0 && support < k){
+
+					for(int j = 0 ; j < pointsSetSizeI.size(); j++ ){
+
+						RoadNetworkPoint rnp = roadNetwork.getPoint(pointsSetSizeI.get(j));
+						roadNetwork.removePoint(rnp);
+
+						Point2D nearestNeighbor = roadNetwork.getKdtree().nearestNeighbor(rnp.getPoint());
+						roadNetwork.getPoint(nearestNeighbor).getTrajectories().addAll(rnp.getTrajectories());
+
+						pointsSetSizeIList.setIndicesNaoComputaveis(pointsSetSizeI.get(j));
 					}
 				}
 			}
-			
-			rnp.setTrajectories(trajectoriesList);
-			rn.getPoints().add(rnp);
+
+			System.out.println(roadNetwork.getPoints().size());
+
 		}
-		
-		return rn;
+
+		return null;
+
 	}
 
-	private List<PointsSet> findQIDsSizeI(RoadNetwork roadNetwork, int k, int m) {
+	private Set<Integer> getCommonsTrajectories(List<Long> pointsSetSizeI) {
 		
-		List<PointsSet> qids = new ArrayList<PointsSet>();
-		List<List<Long>> pointsSetSizeIList = Combination.getCombinations(roadNetwork.getPointsId(), m);
-		
-		for(List<Long> pointsSetSizeI : pointsSetSizeIList){
-			List<Integer> commonsTrajectories = calculateSupport(pointsSetSizeI, roadNetwork);
-			Integer support = commonsTrajectories.size();
-			
-			if(support != 0 && support < k){
-				PointsSet qid = new PointsSet(pointsSetSizeI, m, support);
-				qids.add(qid);
-				System.out.println("pontos:" + qid.getPoints() + ", suporte: " + qid.getSupport());
-			}
-			
-		}
-		
-		return qids;
-	}
-
-	private List<Integer> calculateSupport(List<Long> pointsSetSizeI, RoadNetwork roadNetwork) {
-		
-		List<List<Integer>> trajectoriesList = new ArrayList<List<Integer>>();
+		List<Set<Integer>> trajectoriesList = new ArrayList<Set<Integer>>();
 		
 		for(Long pointP : pointsSetSizeI){
 			
-			List<RoadNetworkPoint> nearestNeighbors = new FilterList<Long>().
-		        		filterList(roadNetwork.getPoints(), PointOfTrajectoryFilters.nearestNeighborFilter(), pointP);
-			
-	        trajectoriesList.add(nearestNeighbors.get(0).getTrajectories());
+			trajectoriesList.add(roadNetwork.getPoint(pointP).getTrajectories());
 		}
 		
-		List<Integer> commonsTrajectories = new ArrayList<Integer>();
-		commonsTrajectories.addAll(trajectoriesList.get(0));
-	    for (ListIterator<List<Integer>> iter = trajectoriesList.listIterator(1); iter.hasNext(); ) {
-	        commonsTrajectories.retainAll(iter.next());
-	    }
-	    
+		Set<Integer> commonsTrajectories = Sets.newHashSet(trajectoriesList.get(0));
+		
+		for(int i = 1 ; i < trajectoriesList.size() ; i++){
+			Set<Integer> aux = (Sets.intersection(commonsTrajectories, trajectoriesList.get(i)));
+			commonsTrajectories = Sets.newHashSet(aux);
+		}
+		
 		return commonsTrajectories;
 	}
 	
 	
-	@Override
-	public Double calculateArea(List<PointOfTrajectory> trajectory) {
-		Polygon2D resultantPolygon = new MultiPolygon2D();
+	public Double calculateInformationLoss(List<PointOfTrajectory> trajectory) {
+		Polygon2D informationLoss = new MultiPolygon2D();
 		
 		for(int i=0 ; i < trajectory.size()-1; i++) {
 				
@@ -157,22 +122,22 @@ public class TrajectoryServiceImpl implements TrajectoryService
 			Polyline2D originalLine = new Polyline2D(originalOrigin, originalDestination);
 			Polyline2D generalizedLine = new Polyline2D(generalizedOrigin, generalizedDestination);
 			
-			// if the two points don't intersect
+			// if the points don't intersect
 			if(originalLine.intersections(generalizedLine.firstEdge()).isEmpty()){
 				
-				resultantPolygon = Polygons2D.union(resultantPolygon, new SimplePolygon2D(originalOrigin, originalDestination, generalizedDestination, generalizedOrigin)); 
+				informationLoss = Polygons2D.union(informationLoss, new SimplePolygon2D(originalOrigin, originalDestination, generalizedDestination, generalizedOrigin)); 
 				
 			} else {
 				
 				List<Point2D> intersection = (List<Point2D>) originalLine.intersections(generalizedLine.firstEdge());
-				resultantPolygon = Polygons2D.union(resultantPolygon, new SimplePolygon2D(originalOrigin, intersection.get(0), generalizedOrigin));
-				resultantPolygon = Polygons2D.union(resultantPolygon, new SimplePolygon2D(originalDestination, intersection.get(0), generalizedDestination));
+				informationLoss = Polygons2D.union(informationLoss, new SimplePolygon2D(originalOrigin, intersection.get(0), generalizedOrigin));
+				informationLoss = Polygons2D.union(informationLoss, new SimplePolygon2D(originalDestination, intersection.get(0), generalizedDestination));
 				
 			}
 				
 		}
 		
-		return resultantPolygon.area();
+		return informationLoss.area();
 	}
 	
 	@Override

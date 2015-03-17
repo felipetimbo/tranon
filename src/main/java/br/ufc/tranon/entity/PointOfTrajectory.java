@@ -11,9 +11,12 @@ public class PointOfTrajectory {
 	private Double latitude;
 	private String geom;
 	private PGgeometry point;
-	private Long nn;
+	private Long nnId;
 	private Double longitudeNn;
 	private Double latitudeNn;
+	private Long anonId;
+	private Double longitudeAn;
+	private Double latitudeAn;
 
 	public Integer getTaxiId() {
 		return this.taxiId;
@@ -63,12 +66,12 @@ public class PointOfTrajectory {
 		this.point = point;
 	}
 	
-	public Long getNn() {
-		return nn;
+	public Long getNnId() {
+		return nnId;
 	}
 
-	public void setNn(Long nn) {
-		this.nn = nn;
+	public void setNnId(Long nn) {
+		this.nnId = nn;
 	}
 
 	public Double getLongitudeNn() {
@@ -85,6 +88,30 @@ public class PointOfTrajectory {
 
 	public void setLatitudeNn(Double latitudeNn) {
 		this.latitudeNn = latitudeNn;
+	}
+
+	public Long getAnonId() {
+		return anonId;
+	}
+
+	public void setAnonId(Long anonId) {
+		this.anonId = anonId;
+	}
+
+	public Double getLongitudeAn() {
+		return longitudeAn;
+	}
+
+	public void setLongitudeAn(Double longitudeAn) {
+		this.longitudeAn = longitudeAn;
+	}
+
+	public Double getLatitudeAn() {
+		return latitudeAn;
+	}
+
+	public void setLatitudeAn(Double latitudeAn) {
+		this.latitudeAn = latitudeAn;
 	}
 	
 }
